@@ -25,9 +25,8 @@ func (r *OrderRepository) Get(id uuid.UUID) order.Order {
 }
 
 func (r *OrderRepository) Create(id uuid.UUID, location sharedkernel.Location) (order.Order, error) {
-	var newOrder order.Order
+	newOrder, _ := order.NewOrder(id, location)
 	err := common.NewUnitOfWork(r.db).ExecuteInTransaction(func(tx *gorm.DB) error {
-		newOrder, _ = order.NewOrder(id, location)
 		var err error
 		if err != nil {
 			return err
@@ -46,7 +45,8 @@ func (r *OrderRepository) Create(id uuid.UUID, location sharedkernel.Location) (
 }
 
 func (r *OrderRepository) Update(id uuid.UUID) (order.Order, error) {
-	var newOrder order.Order
+	//TODO: поиск по idи потом обновление
+	var newOrder order.Order //этот код заглушка
 	err := common.NewUnitOfWork(r.db).ExecuteInTransaction(func(tx *gorm.DB) error {
 		//TODO:Реализация обновления заказа
 		return nil

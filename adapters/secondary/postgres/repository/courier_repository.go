@@ -25,9 +25,8 @@ func (r *CourierRepository) Get(id uuid.UUID) courier.Courier {
 }
 
 func (r *CourierRepository) Create(name string, transport courier.Transport, location sharedkernel.Location) (courier.Courier, error) {
-	var newCourier courier.Courier
+	newCourier := courier.NewCourier(name, transport, location)
 	err := common.NewUnitOfWork(r.db).ExecuteInTransaction(func(tx *gorm.DB) error {
-		newCourier = courier.NewCourier(name, transport, location)
 		var err error
 		if err != nil {
 			return err
@@ -46,7 +45,8 @@ func (r *CourierRepository) Create(name string, transport courier.Transport, loc
 }
 
 func (r *CourierRepository) Update(id uuid.UUID) (courier.Courier, error) {
-	var newCourier courier.Courier
+	//TODO:поиск курьера по id, затем его обновление
+	var newCourier courier.Courier //этот код заглушка, потом удалить
 	err := common.NewUnitOfWork(r.db).ExecuteInTransaction(func(tx *gorm.DB) error {
 		//TODO:Реализация обновления курьера
 		return nil
