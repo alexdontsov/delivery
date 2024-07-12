@@ -1,11 +1,12 @@
 package repository
 
 import (
+	"context"
 	"delivery/adapters/secondary/postgres/common"
 	"delivery/core/domain/model/courier"
-	"delivery/core/domain/model/sharedkernel"
 	"github.com/google/uuid"
-	"gorm.io/gorm"
+	"github.com/jinzhu/gorm"
+	otgorm "github.com/smacker/opentracing-gorm"
 )
 
 type CourierRepository struct {
@@ -16,53 +17,55 @@ func NewCourierRepository(conn *gorm.DB) *CourierRepository {
 	return &CourierRepository{db: conn}
 }
 
-func (r *CourierRepository) Get(id uuid.UUID) courier.Courier {
+func (r *CourierRepository) Get(ctx context.Context, id uuid.UUID) (*courier.Courier, error) {
+	db := otgorm.SetSpanToGorm(ctx, r.db)
+	courierDb := &courier.Courier{}
 
-	var result courier.Courier
-	r.db.Model(courier.Courier{Id: id}).First(&result)
+	err := db.
+		Preload("Transport").
+		Where("id = ?", id).
+		First(courierDb).
+		Error
 
-	return result
+	if err != nil {
+		return nil, err
+	}
+
+	return courierDb, err
 }
 
-func (r *CourierRepository) Create(name string, transport courier.Transport, location sharedkernel.Location) (courier.Courier, error) {
-	newCourier := courier.NewCourier(name, transport, location)
+func (r *CourierRepository) Create(courier courier.Courier) (courier.Courier, error) {
 	err := common.NewUnitOfWork(r.db).ExecuteInTransaction(func(tx *gorm.DB) error {
 		var err error
 		if err != nil {
 			return err
 		}
 
-		tx.Create(newCourier)
+		tx.Create(courier)
 
 		return nil
 	})
 
 	if err != nil {
-		return newCourier, err
+		return courier, err
 	}
 
-	return newCourier, nil
+	return courier, nil
 }
 
-func (r *CourierRepository) Update(id uuid.UUID) (courier.Courier, error) {
-	//TODO:поиск курьера по id, затем его обновление
-	var newCourier courier.Courier //этот код заглушка, потом удалить
-	err := common.NewUnitOfWork(r.db).ExecuteInTransaction(func(tx *gorm.DB) error {
-		//TODO:Реализация обновления курьера
-		return nil
-	})
+func (r *CourierRepository) Update(ctx context.Context, courier *courier.Courier) (*courier.Courier, error) {
+	db := otgorm.SetSpanToGorm(ctx, r.db)
+	err := db.Save(courier).Error
 
-	if err != nil {
-		return newCourier, err
-	}
-
-	return newCourier, nil
+	return courier, err
 }
 
-func (r *CourierRepository) GetListWithStatusReady() ([]courier.Courier, error) {
-	var couriers []courier.Courier
+func (r *CourierRepository) GetListWithStatusReady() (couriers []*courier.Courier, err error) {
+	err = r.db.
+		Preload("Transport").
+		Where("status = ? ", courier.Ready).
+		Find(&couriers).
+		Error
 
-	r.db.Where(&courier.Courier{Status: courier.Ready}).Find(&couriers)
-
-	return couriers, nil
+	return couriers, err
 }

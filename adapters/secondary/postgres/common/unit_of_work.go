@@ -1,6 +1,6 @@
 package common
 
-import "gorm.io/gorm"
+import "github.com/jinzhu/gorm"
 
 type UnitOfWork interface {
 	ExecuteInTransaction(fn func(tx *gorm.DB) error) error

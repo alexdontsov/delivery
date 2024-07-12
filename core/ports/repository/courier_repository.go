@@ -1,14 +1,14 @@
 package repository
 
 import (
+	"context"
 	"delivery/core/domain/model/courier"
-	"delivery/core/domain/model/sharedkernel"
 	"github.com/google/uuid"
 )
 
 type CourierRepository interface {
-	Get(id uuid.UUID) courier.Courier
-	Create(name string, transport courier.Transport, location sharedkernel.Location) (courier.Courier, error)
-	Update(id uuid.UUID) (courier.Courier, error)
-	GetListWithStatusReady() ([]courier.Courier, error)
+	Get(ctx context.Context, id uuid.UUID) (*courier.Courier, error)
+	Create(courier courier.Courier) (courier.Courier, error)
+	Update(ctx context.Context, courier *courier.Courier) (*courier.Courier, error)
+	GetListWithStatusReady() (couriers []*courier.Courier, err error)
 }

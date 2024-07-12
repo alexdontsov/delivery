@@ -1,11 +1,12 @@
 package repository
 
 import (
+	"context"
 	"delivery/adapters/secondary/postgres/common"
 	"delivery/core/domain/model/order"
-	"delivery/core/domain/model/sharedkernel"
 	"github.com/google/uuid"
-	"gorm.io/gorm"
+	"github.com/jinzhu/gorm"
+	otgorm "github.com/smacker/opentracing-gorm"
 )
 
 type OrderRepository struct {
@@ -16,61 +17,63 @@ func NewOrderRepository(conn *gorm.DB) *OrderRepository {
 	return &OrderRepository{db: conn}
 }
 
-func (r *OrderRepository) Get(id uuid.UUID) order.Order {
+func (r *OrderRepository) Get(ctx context.Context, id uuid.UUID) (*order.Order, error) {
+	db := otgorm.SetSpanToGorm(ctx, r.db)
+	orderDb := &order.Order{}
 
-	var result order.Order
-	r.db.Model(order.Order{Id: id}).First(&result)
+	err := db.
+		Preload("Transport").
+		Where("id = ?", id).
+		First(orderDb).
+		Error
 
-	return result
+	if err != nil {
+		return nil, err
+	}
+
+	return orderDb, err
 }
 
-func (r *OrderRepository) Create(id uuid.UUID, location sharedkernel.Location) (order.Order, error) {
-	newOrder, _ := order.NewOrder(id, location)
+func (r *OrderRepository) Create(order order.Order) (order.Order, error) {
 	err := common.NewUnitOfWork(r.db).ExecuteInTransaction(func(tx *gorm.DB) error {
 		var err error
 		if err != nil {
 			return err
 		}
 
-		tx.Create(newOrder)
+		tx.Create(order)
 
 		return nil
 	})
 
 	if err != nil {
-		return newOrder, err
+		return order, err
 	}
 
-	return newOrder, nil
+	return order, nil
 }
 
-func (r *OrderRepository) Update(id uuid.UUID) (order.Order, error) {
-	//TODO: поиск по idи потом обновление
-	var newOrder order.Order //этот код заглушка
-	err := common.NewUnitOfWork(r.db).ExecuteInTransaction(func(tx *gorm.DB) error {
-		//TODO:Реализация обновления заказа
-		return nil
-	})
+func (r *OrderRepository) Update(ctx context.Context, order *order.Order) (*order.Order, error) {
+	db := otgorm.SetSpanToGorm(ctx, r.db)
+	err := db.Save(order).Error
 
-	if err != nil {
-		return newOrder, err
-	}
-
-	return newOrder, nil
+	return order, err
 }
 
-func (r *OrderRepository) GetListWithStatusCreated() ([]order.Order, error) {
-	var orders []order.Order
+func (r *OrderRepository) GetListWithStatusCreated() (orders []*order.Order, err error) {
+	err = r.db.
+		Where("status = ? ", order.Assigned).
+		Find(&orders).
+		Error
 
-	r.db.Where(&order.Order{Status: order.Created}).Find(&orders)
-
-	return orders, nil
+	return orders, err
 }
 
-func (r *OrderRepository) GetListWithStatusAssigned() ([]order.Order, error) {
-	var orders []order.Order
+func (r *OrderRepository) GetListWithStatusAssigned() (orders []*order.Order, err error) {
+	err = r.db.
+		Where("status = ? ", order.Assigned).
+		Find(&orders).
+		Error
 
-	r.db.Where(&order.Order{Status: order.Assigned}).Find(&orders)
-
-	return orders, nil
+	return orders, err
 }
