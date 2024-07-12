@@ -6,31 +6,31 @@ import (
 )
 
 type Courier struct {
-	id        uuid.UUID
+	Id        uuid.UUID
 	name      string
-	status    Status
+	Status    Status
 	transport Transport
 	location  sharedkernel.Location
 }
 
 func NewCourier(name string, transport Transport, location sharedkernel.Location) Courier {
 	return Courier{
-		id:        uuid.New(),
+		Id:        uuid.New(),
 		name:      name,
-		status:    Status{Value: Free.Value},
+		Status:    Status{Value: Free.Value},
 		transport: transport,
 		location:  location,
 	}
 }
 
 func BusyCourier(courier Courier) Courier {
-	courier.status.Value = Busy.Value
+	courier.Status.Value = Busy.Value
 
 	return courier
 }
 
 func FreeCourier(courier Courier) Courier {
-	courier.status.Value = Free.Value
+	courier.Status.Value = Free.Value
 
 	return courier
 }
