@@ -54,10 +54,22 @@ func (r *OrderRepository) Create(order order.Order) (order.Order, error) {
 }
 
 func (r *OrderRepository) Update(ctx context.Context, order *order.Order) (*order.Order, error) {
-	db := otgorm.SetSpanToGorm(ctx, r.db)
-	err := db.Save(order).Error
+	err := common.NewUnitOfWork(r.db).ExecuteInTransaction(func(tx *gorm.DB) error {
+		var err error
+		if err != nil {
+			return err
+		}
 
-	return order, err
+		err = r.db.Save(order).Error
+
+		return nil
+	})
+
+	if err != nil {
+		return order, err
+	}
+
+	return order, nil
 }
 
 func (r *OrderRepository) GetListWithStatusCreated() (orders []*order.Order, err error) {

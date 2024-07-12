@@ -54,9 +54,17 @@ func (r *CourierRepository) Create(courier courier.Courier) (courier.Courier, er
 }
 
 func (r *CourierRepository) Update(ctx context.Context, courier *courier.Courier) (*courier.Courier, error) {
-	db := otgorm.SetSpanToGorm(ctx, r.db)
-	err := db.Save(courier).Error
+	err := common.NewUnitOfWork(r.db).ExecuteInTransaction(func(tx *gorm.DB) error {
+		var err error
+		if err != nil {
+			return err
+		}
 
+		tx.Save(courier)
+
+		return nil
+	})
+	
 	return courier, err
 }
 
