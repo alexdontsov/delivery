@@ -14,7 +14,6 @@ func NewCreateOrderCommandHandler(orderRepository *repository.OrderRepository) *
 }
 
 func (c *CreateOrderCommandHandler) Handle(ctx context.Context, command *CreateOrderCommand) (*CreateOrderCommand, error) {
-
 	createdProduct, err := c.orderRepository.Create(ctx, product)
 	if err != nil {
 		return nil, err
