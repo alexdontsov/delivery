@@ -64,7 +64,7 @@ func (r *CourierRepository) Update(ctx context.Context, courier *courier.Courier
 
 		return nil
 	})
-	
+
 	return courier, err
 }
 
