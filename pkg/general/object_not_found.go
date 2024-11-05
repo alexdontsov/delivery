@@ -3,13 +3,13 @@ package general
 import "fmt"
 
 type ObjectNotFound struct {
-	msg string
+    msg string
 }
 
 func NewObjectNotFoundError(msg string) ObjectNotFound {
-	return ObjectNotFound{msg: msg}
+    return ObjectNotFound{msg: msg}
 }
 
 func (v ObjectNotFound) Error() string {
-	return fmt.Sprintf("object not found %s", v.msg)
+    return fmt.Sprintf("object not found %s", v.msg)
 }
