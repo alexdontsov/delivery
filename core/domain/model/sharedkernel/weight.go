@@ -3,26 +3,26 @@ package sharedkernel
 import "delivery/pkg/general"
 
 type Weight struct {
-	Value int
+    Value int
 }
 
 func NewWeight(value int) (Weight, error) {
-	const minWeight = 0
-	const maxWeight = 1000
+    const minWeight = 0
+    const maxWeight = 1000
 
-	if value <= minWeight {
-		return Weight{}, general.NewValueIsOutOfRange("value", value, minWeight, maxWeight)
-	}
+    if value <= minWeight {
+        return Weight{}, general.NewValueIsOutOfRange("value", value, minWeight, maxWeight)
+    }
 
-	return Weight{
-		Value: value,
-	}, nil
+    return Weight{
+        Value: value,
+    }, nil
 }
 
 func (weight *Weight) IsEqual(other Weight) bool {
-	return weight.Value == other.Value
+    return weight.Value == other.Value
 }
 
 func (weight *Weight) IsEmpty() bool {
-	return *weight == Weight{}
+    return *weight == Weight{}
 }

@@ -1,9 +1,9 @@
 package main
 
 import (
-	"log"
+    "log"
 )
 
 func main() {
-	log.Println("healthy")
+    log.Println("healthy")
 }

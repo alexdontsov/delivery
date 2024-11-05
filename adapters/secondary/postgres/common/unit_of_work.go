@@ -3,27 +3,27 @@ package common
 import "github.com/jinzhu/gorm"
 
 type UnitOfWork interface {
-	ExecuteInTransaction(fn func(tx *gorm.DB) error) error
+    ExecuteInTransaction(fn func(tx *gorm.DB) error) error
 }
 
 type unitOfWork struct {
-	db *gorm.DB
+    db *gorm.DB
 }
 
 func NewUnitOfWork(db *gorm.DB) UnitOfWork {
-	return &unitOfWork{db: db}
+    return &unitOfWork{db: db}
 }
 
 func (u *unitOfWork) ExecuteInTransaction(fn func(tx *gorm.DB) error) error {
-	tx := u.db.Begin()
-	if err := tx.Error; err != nil {
-		return err
-	}
+    tx := u.db.Begin()
+    if err := tx.Error; err != nil {
+        return err
+    }
 
-	if err := fn(tx); err != nil {
-		tx.Rollback()
-		return err
-	}
+    if err := fn(tx); err != nil {
+        tx.Rollback()
+        return err
+    }
 
-	return tx.Commit().Error
+    return tx.Commit().Error
 }
